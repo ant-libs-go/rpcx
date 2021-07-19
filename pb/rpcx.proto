@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package pb;
+option go_package = ".;pb";
+
+message Header {
+    string requester = 1;   /* 调用者对自身的描述，必须，由调用者填写。如:ui#192.168.10.2:8211 */
+    string trace_id = 2;    /* 请求的唯一ID，必须，由调用者填写 */
+    int64 timestamp = 3;    /* 事件发生的时间，必须，由调用者填写 */
+    string version = 4;     /* 传输协议版本号，必须，由调用者填写 */
+    string operator = 5;    /* 操作者ID，如web操作的操作用户，由调用者填写 */
+    int32 reply_code = 6;   /* 服务端应答码，由各业务自己定义枚举 */
+    string reply_msg = 7;   /* 服务端应错误，由各业务自己定义 */
+    map<string, string> metadata = 10; /* 交互数据 */
+}
+
+message Ping {
+    message Req {
+        Header header = 1;
+    }
+    message Resp {
+        Header header = 1;
+    }
+}
