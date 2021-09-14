@@ -165,16 +165,15 @@ func loadCfg(name string) (r *Cfg, err error) {
 func loadCfgs() (r map[string]*Cfg, err error) {
 	r = map[string]*Cfg{}
 
-	cfg := &rpcxConfig{}
 	once.Do(func() {
-		_, err = config.Load(cfg, options.WithOnChangeFn(func(cfg interface{}) {
+		config.Get(&rpcxConfig{}, options.WithOpOnChangeFn(func(cfg interface{}) {
 			lock.Lock()
 			defer lock.Unlock()
 			pools = map[string]*client.XClientPool{}
 		}))
 	})
 
-	cfg = config.Get(cfg).(*rpcxConfig)
+	cfg := config.Get(&rpcxConfig{}).(*rpcxConfig)
 	if err == nil && (cfg.Rpcx == nil || cfg.Rpcx.Cfgs == nil || len(cfg.Rpcx.Cfgs) == 0) {
 		err = fmt.Errorf("not configed")
 	}
