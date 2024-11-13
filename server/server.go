@@ -18,9 +18,10 @@ import (
 	"github.com/ant-libs-go/util"
 	"github.com/ant-libs-go/util/logs"
 	"github.com/rcrowley/go-metrics"
-	"github.com/rpcxio/rpcx-zookeeper/serverplugin"
+	zookeeper_plugin "github.com/rpcxio/rpcx-zookeeper/serverplugin"
 	uuid "github.com/satori/go.uuid"
 	rpcx_server "github.com/smallnest/rpcx/server"
+	"github.com/smallnest/rpcx/serverplugin"
 )
 
 type ServiceImpl struct{}
@@ -43,7 +44,7 @@ func (this *ServiceImpl) Ping(ctx context.Context, req *pb.Ping_Req, resp *pb.Pi
 
 type srv struct {
 	s        *rpcx_server.Server
-	register *serverplugin.ZooKeeperRegisterPlugin
+	register *zookeeper_plugin.ZooKeeperRegisterPlugin
 	isServe  bool
 	cfg      *Cfg
 	rcvrs    map[string]interface{}
@@ -105,7 +106,7 @@ func NewRpcxServer(cfg *Cfg) (r *srv, err error) {
 			return
 		}
 
-		r.register = &serverplugin.ZooKeeperRegisterPlugin{
+		r.register = &zookeeper_plugin.ZooKeeperRegisterPlugin{
 			ServiceAddress:   fmt.Sprintf("tcp@%s:%s", ip, port),
 			ZooKeeperServers: cfg.RegisterServers,
 			BasePath:         cfg.RegisterBasePath,
