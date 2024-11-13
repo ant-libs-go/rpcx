@@ -18,9 +18,9 @@ import (
 	"github.com/ant-libs-go/util"
 	"github.com/ant-libs-go/util/logs"
 	"github.com/rcrowley/go-metrics"
+	"github.com/rpcxio/rpcx-zookeeper/serverplugin"
 	uuid "github.com/satori/go.uuid"
 	rpcx_server "github.com/smallnest/rpcx/server"
-	"github.com/smallnest/rpcx/serverplugin"
 )
 
 type ServiceImpl struct{}
