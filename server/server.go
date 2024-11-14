@@ -19,9 +19,11 @@ import (
 	"github.com/ant-libs-go/util/logs"
 	"github.com/rcrowley/go-metrics"
 	zookeeper_plugin "github.com/rpcxio/rpcx-zookeeper/serverplugin"
+	"github.com/rpcxio/rpcxplus/grpcx"
 	uuid "github.com/satori/go.uuid"
 	rpcx_server "github.com/smallnest/rpcx/server"
 	"github.com/smallnest/rpcx/serverplugin"
+	"google.golang.org/grpc"
 )
 
 type ServiceImpl struct{}
@@ -44,10 +46,18 @@ func (this *ServiceImpl) Ping(ctx context.Context, req *pb.Ping_Req, resp *pb.Pi
 
 type srv struct {
 	s        *rpcx_server.Server
+	gs       *grpcx.GrpcServerPlugin
 	register *zookeeper_plugin.ZooKeeperRegisterPlugin
 	isServe  bool
 	cfg      *Cfg
 	rcvrs    map[string]interface{}
+}
+
+func (this *srv) StartAndGrpc(name string, rcvr interface{}, grcvr func(*grpc.Server)) (err error) {
+	if this.gs != nil {
+		this.gs.RegisterService(grcvr)
+	}
+	return this.Start(name, rcvr)
 }
 
 func (this *srv) Start(name string, rcvr interface{}) (err error) {
@@ -59,25 +69,34 @@ func (this *srv) Start(name string, rcvr interface{}) (err error) {
 		}
 	}
 
-	go func() {
-		if this.isServe == true {
-			return
-		}
-		this.isServe = true
+	if this.isServe == true {
+		return
+	}
+	this.isServe = true
 
-		if err = this.s.Serve("tcp", this.cfg.DialAddr); err == rpcx_server.ErrServerClosed {
-			err = nil
-		}
-		if err == nil && this.register != nil {
-			err = this.register.Start()
-		}
-	}()
+	if this.register != nil {
+		err = this.register.Start()
+	}
+	if err == nil && this.gs != nil {
+		go func() { err = this.gs.Start() }()
+	}
+	time.Sleep(time.Second)
+	if err == nil {
+		go func() {
+			if err = this.s.Serve("tcp", this.cfg.DialAddr); err == rpcx_server.ErrServerClosed {
+				err = nil
+			}
+		}()
+	}
 	time.Sleep(time.Second)
 	return
 }
 
 func (this *srv) Shutdown(ctx context.Context) (err error) {
 	err = this.s.Shutdown(ctx)
+	if err == nil && this.gs != nil {
+		err = this.gs.Close()
+	}
 	if err == nil && this.register != nil {
 		err = this.register.Stop()
 	}
@@ -89,6 +108,11 @@ func NewRpcxServer(cfg *Cfg) (r *srv, err error) {
 		s:     rpcx_server.NewServer(buildServerOptions(cfg)...),
 		cfg:   cfg,
 		rcvrs: map[string]interface{}{}}
+
+	if cfg.EnableGrpc == true {
+		r.gs = grpcx.NewGrpcServerPlugin()
+		r.s.Plugins.Add(r.gs)
+	}
 
 	if len(cfg.RegisterServers) > 0 {
 		var ip, port string

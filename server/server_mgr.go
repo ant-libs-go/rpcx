@@ -16,6 +16,7 @@ import (
 	"github.com/ant-libs-go/config"
 	"github.com/ant-libs-go/safe_stop"
 	rpcx_server "github.com/smallnest/rpcx/server"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -40,6 +41,8 @@ type Cfg struct {
 	DialReadTimeout  time.Duration `toml:"read_timeout"`
 	DialWriteTimeout time.Duration `toml:"write_timeout"`
 
+	EnableGrpc bool `toml:"enable_grpc"`
+
 	// register, only support zookeeper
 	RegisterServers        []string      `toml:"register_servers"`
 	RegisterBasePath       string        `toml:"register_base_path"`
@@ -56,6 +59,15 @@ func StopDefaultServer() (err error) {
 
 func DefaultServer() (r *rpcx_server.Server) {
 	return Server("default").s
+}
+
+func StartServerAndGrpc(name string, rcvr interface{}, grcvr func(*grpc.Server)) (err error) {
+	safe_stop.Lock(1)
+	var srv *srv
+	if srv, err = SafeServer(name); err == nil {
+		err = srv.StartAndGrpc("Server", rcvr, grcvr)
+	}
+	return
 }
 
 func StartServer(name string, rcvr interface{}) (err error) {
