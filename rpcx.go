@@ -26,7 +26,7 @@ func init() {
 	servername = filepath.Base(os.Args[0])
 }
 
-func BuildRpcxHeader(traceId string) *pb.Header {
+func BuildRpcxHeader(traceId string, operator string) *pb.Header {
 	if len(traceId) == 0 {
 		traceId = uuid.NewV4().String()
 	}
@@ -35,6 +35,7 @@ func BuildRpcxHeader(traceId string) *pb.Header {
 		TraceId:   traceId,
 		Timestamp: time.Now().Unix(),
 		Version:   "1.0.0",
+		Operator:  operator,
 		Metadata:  map[string]string{}}
 }
 
