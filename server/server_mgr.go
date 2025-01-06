@@ -43,29 +43,33 @@ type Cfg struct {
 
 	EnableGrpc bool `toml:"enable_grpc"`
 
-	// register, only support zookeeper
-	RegisterServers        []string      `toml:"register_servers"`
-	RegisterBasePath       string        `toml:"register_base_path"`
-	RegisterUpdateInterval time.Duration `toml:"register_update_interval"`
+	// register
+	Register string `toml:"register"`
+
+	// zookeeper register
+	RegisterZkServers        []string      `toml:"register_zk_servers"`
+	RegisterZkBasePath       string        `toml:"register_zk_basepath"`
+	RegisterZkUpdateInterval time.Duration `toml:"register_zk_update_interval"`
+
+	// nacos register
+	RegisterNcServers     []string `toml:"register_nc_servers"`
+	RegisterNcNamespaceId string   `toml:"register_nc_namespace_id"`
+	RegisterNcCacheDir    string   `toml:"register_nc_cache_dir"`
+	RegisterNcLogDir      string   `toml:"register_nc_log_dir"`
+	RegisterNcLogLevel    string   `toml:"register_nc_log_level"`
+	RegisterNcAccessKey   string   `toml:"register_nc_access_key"`
+	RegisterNcSecretKey   string   `toml:"register_nc_secret_key"`
 }
 
-func StartDefaultServer(rcvr interface{}) (err error) {
-	return StartServer("default", rcvr)
-}
-
-func StopDefaultServer() (err error) {
-	return StopServer("default")
-}
-
-func DefaultServer() (r *rpcx_server.Server) {
-	return Server("default").s
+func RpcxServer(name string) (r *rpcx_server.Server) {
+	return Server(name).s
 }
 
 func StartServerAndGrpc(name string, rcvr interface{}, grcvr func(*grpc.Server)) (err error) {
 	safe_stop.Lock(1)
 	var srv *srv
 	if srv, err = SafeServer(name); err == nil {
-		err = srv.StartAndGrpc("Server", rcvr, grcvr)
+		err = srv.StartAndGrpc(name, rcvr, grcvr)
 	}
 	return
 }
@@ -74,7 +78,7 @@ func StartServer(name string, rcvr interface{}) (err error) {
 	safe_stop.Lock(1)
 	var srv *srv
 	if srv, err = SafeServer(name); err == nil {
-		err = srv.Start("Server", rcvr)
+		err = srv.Start(name, rcvr)
 	}
 	return
 }

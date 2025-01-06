@@ -1,0 +1,20 @@
+[rpcx.client.demo_serverzk]
+    addrs = ["192.168.21.23:2181"]
+    fail_mode = "over"
+    select_mode = "random"
+    dial_timeout = 1000
+    discovery = "zookeeper_discovery"
+    discovery_zk_basepath = "demo_serverzk_basepath"
+
+[rpcx.client.demo_servernc]
+    addrs = ["192.168.21.23:8848"]
+    fail_mode = "over"
+    select_mode = "random"
+    dial_timeout = 1000
+    discovery = "nacos_discovery"
+    register_nc_namespace_id = "8642c505-0f87-4b91-ba43-81528c63888c"
+    register_nc_cache_dir = "./runtime"
+    register_nc_log_dir = "./runtime/logs"
+    register_nc_log_level = "info"
+    register_nc_access_key = ""
+    register_nc_secret_key = ""
