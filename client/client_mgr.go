@@ -18,7 +18,7 @@ import (
 	"github.com/ant-libs-go/config/options"
 	"github.com/ant-libs-go/rpcx"
 	"github.com/ant-libs-go/rpcx/pb"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"github.com/smallnest/rpcx/client"
 )
 
@@ -46,14 +46,21 @@ type rpcxConfig struct {
 type Cfg struct {
 	// dial
 	DialAddrs          []string      `toml:"addrs"`
-	DialServerName     string        `toml:"server_name"` // default `Server`
 	DialDiscovery      string        `toml:"discovery"`
 	DialFailMode       string        `toml:"fail_mode"`
 	DialSelectMode     string        `toml:"select_mode"`
 	DialConnectTimeout time.Duration `toml:"dial_timeout"`
 
-	// discovery, only support zookeeper
-	DiscoveryBasePath string `toml:"discovery_base_path"` // only discovery
+	// zookeeper register
+	DiscoveryZkBasePath string `toml:"discovery_zk_basepath"`
+
+	// nacos register
+	RegisterNcNamespaceId string `toml:"register_nc_namespace_id"`
+	RegisterNcCacheDir    string `toml:"register_nc_cache_dir"`
+	RegisterNcLogDir      string `toml:"register_nc_log_dir"`
+	RegisterNcLogLevel    string `toml:"register_nc_log_level"`
+	RegisterNcAccessKey   string `toml:"register_nc_access_key"`
+	RegisterNcSecretKey   string `toml:"register_nc_secret_key"`
 
 	// pool
 	PoolMaxActive int `toml:"pool_max_active"` // 最大活跃连接数
@@ -67,7 +74,7 @@ func Valid(names ...string) (err error) {
 		if cfgs, err = loadCfgs(); err != nil {
 			return
 		}
-		for k, _ := range cfgs {
+		for k := range cfgs {
 			names = append(names, k)
 		}
 	}
@@ -87,9 +94,9 @@ func Valid(names ...string) (err error) {
 func Call(ctx context.Context, name string, method string, req Message, resp Message) (err error) {
 	if req.GetHeader() == nil {
 		fl := reflect.ValueOf(req).Elem().FieldByName("Header")
-		//if fl.IsValid() && fl.CanSet() && fl.Type().String() == "*common.Header" {
+		// if fl.IsValid() && fl.CanSet() && fl.Type().String() == "*common.Header" {
 		if fl.IsValid() && fl.CanSet() {
-			fl.Set(reflect.ValueOf(rpcx.BuildRpcxHeader("")))
+			fl.Set(reflect.ValueOf(rpcx.BuildRpcxHeader("", "")))
 		}
 	}
 	var cli client.XClient
@@ -142,7 +149,7 @@ func addPool(name string) (r *client.XClientPool, err error) {
 	if cfg, err = loadCfg(name); err != nil {
 		return
 	}
-	r, err = NewRpcxClientPool(cfg)
+	r, err = NewRpcxClientPool(name, cfg)
 
 	lock.Lock()
 	pools[name] = r

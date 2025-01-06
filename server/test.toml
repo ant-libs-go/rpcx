@@ -1,0 +1,17 @@
+[rpcx.server.demo_serverzk]
+    addr = ":23013"
+    register = "zookeeper_register"
+    register_zk_servers = ["192.168.21.23:2181"]
+    register_zk_basepath = "demo_serverzk_basepath"
+
+[rpcx.server.demo_servernc]
+    addr = ":23011"
+    register = "nacos_register"
+    register_nc_servers = ["192.168.21.23:8848"]
+    register_nc_namespace_id = "8642c505-0f87-4b91-ba43-81528c63888c"
+    register_nc_cache_dir = "./runtime"
+    register_nc_log_dir = "./runtime/logs"
+    register_nc_log_level = "info"
+    register_nc_access_key = ""
+    register_nc_secret_key = ""
+
