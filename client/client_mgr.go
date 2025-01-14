@@ -10,16 +10,14 @@ package client
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"sync"
 	"time"
 
 	"github.com/ant-libs-go/config"
 	"github.com/ant-libs-go/config/options"
-	"github.com/ant-libs-go/rpcx"
 	"github.com/ant-libs-go/rpcx/pb"
-	"google.golang.org/protobuf/proto"
 	"github.com/smallnest/rpcx/client"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -32,10 +30,10 @@ func init() {
 	pools = map[string]*client.XClientPool{}
 }
 
-type Message interface {
-	proto.Message
-	GetHeader() *pb.Header
-}
+// type Message interface {
+//	proto.Message
+//	GetHeader() *pb.Header
+//}
 
 type rpcxConfig struct {
 	Rpcx *struct {
@@ -91,14 +89,14 @@ func Valid(names ...string) (err error) {
 	return
 }
 
-func Call(ctx context.Context, name string, method string, req Message, resp Message) (err error) {
-	if req.GetHeader() == nil {
-		fl := reflect.ValueOf(req).Elem().FieldByName("Header")
-		// if fl.IsValid() && fl.CanSet() && fl.Type().String() == "*common.Header" {
-		if fl.IsValid() && fl.CanSet() {
-			fl.Set(reflect.ValueOf(rpcx.BuildRpcxHeader("", "")))
-		}
-	}
+func Call(ctx context.Context, name string, method string, req proto.Message, resp proto.Message) (err error) {
+	// if req.GetHeader() == nil {
+	//	fl := reflect.ValueOf(req).Elem().FieldByName("Header")
+	//	// if fl.IsValid() && fl.CanSet() && fl.Type().String() == "*common.Header" {
+	//	if fl.IsValid() && fl.CanSet() {
+	//		fl.Set(reflect.ValueOf(rpcx.BuildRpcxHeader("", "")))
+	//	}
+	//}
 	var cli client.XClient
 	cli, err = SafeClient(name)
 	if err == nil {
